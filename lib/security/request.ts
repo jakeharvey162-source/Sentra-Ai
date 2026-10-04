@@ -4,7 +4,18 @@ export class RequestError extends Error {
 }
 export async function readInvestigationInput(request: Request): Promise<{ input: string; saveCase: boolean }> {
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) throw new RequestError("Cross-origin requests are not allowed.", 403);
+  if (origin) {
+    const requestUrl = new URL(request.url);
+    const authority = request.headers.get("host") ?? requestUrl.host;
+    let sameOrigin = false;
+    try {
+      const source = new URL(origin);
+      sameOrigin = source.host === authority && source.protocol === requestUrl.protocol;
+    } catch {}
+    // Next.js can use an internal hostname in request.url behind its HTTP proxy.
+    // The Host header carries the authority the browser actually requested.
+    if (!sameOrigin) throw new RequestError("Cross-origin requests are not allowed.", 403);
+  }
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new RequestError("Use application/json.", 415);
   if (!request.body) throw new RequestError("Input is required.", 400);
   const reader = request.body.getReader();

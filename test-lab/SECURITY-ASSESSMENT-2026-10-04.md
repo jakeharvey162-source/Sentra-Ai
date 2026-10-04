@@ -42,6 +42,11 @@ A later authorized Strix run should target a disposable staging deployment, use 
 - Distributed platform-level throttling. In-memory buckets are a per-instance backstop and reset on restart; they are not a distributed abuse-control guarantee.
 - Strix staging pentest, full app scanner, media/identity analysis and automated remediation remain incomplete.
 - Heuristic signals and low scores cannot prove safety; adversarial linguistic variations remain possible.
+- Full npm audit also reports five development dependency advisories through braces/Tailwind 3 (GHSA-vfj7-8cjw-p6xm); no patched braces version is published. These packages process trusted build patterns rather than submitted case text. Production dependency audit is clean. A Tailwind major-version migration is a separate build-tool remediation, not silently forced here.
 - Global CSP is a restrictive baseline for framing/objects, not a full nonce-based script policy.
 
 No finite test suite establishes that every flaw has been eliminated.
+
+## Browser-CI correction
+
+The first browser run caught a legitimate-request rejection introduced by comparing Origin to Next.js' internal request URL. Reproduced with a real Origin header on the built server; fixed using the requested Host authority and covered in both module and HTTP tests. One ambiguous Protect My App selector was also made exact. The browser suite must pass on the corrected commit before merging.

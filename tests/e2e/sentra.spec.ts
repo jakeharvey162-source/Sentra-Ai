@@ -5,7 +5,7 @@ test("home page loads and core navigation is visible", async ({ page }) => {
   await expect(page).toHaveTitle(/Sentra AI/);
   await expect(page.getByText("Security is mostly")).toBeVisible();
   await expect(page.getByRole("button", { name: /Run Cyber Team/i })).toBeDisabled();
-  await expect(page.locator("#protect").getByText(/protect my app/i)).toBeVisible();
+  await expect(page.locator("#protect").getByText("protect my app", { exact: true })).toBeVisible();
   await expect(page.locator("#team").getByText("Most cyber defense is")).toBeVisible();
 });
 

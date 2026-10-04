@@ -82,6 +82,8 @@ try {
     assert.deepEqual(await readInvestigationInput(request('{"input":" hi "}', {origin:'https://sentra.test'})), {input:'hi',saveCase:false});
     assert.equal((await readInvestigationInput(request('{"input":"hi","saveCase":"true"}'))).saveCase, false);
     assert.equal((await readInvestigationInput(request('{"input":"hi","saveCase":true}'))).saveCase, true);
+    const proxied = new Request('http://localhost:3000/api/investigate', {method:'POST',headers:{'content-type':'application/json',host:'127.0.0.1:3000',origin:'http://127.0.0.1:3000'},body:'{"input":"hello"}'});
+    assert.equal((await readInvestigationInput(proxied)).input, 'hello');
   });
   await check('rate limit and reset', () => {
     for (let i = 0; i < 30; i++) assert.equal(allowInvestigation('fixture', 1), true);

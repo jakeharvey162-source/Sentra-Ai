@@ -18,7 +18,7 @@ try {
   r=await post({input:'hello'},{origin:'https://evil.test'});assert.equal(r.status,403);
   r=await post({input:'a'.repeat(20001)});assert.equal(r.status,413);
   r=await post({input:'hello'},{'content-type':'text/plain'});assert.equal(r.status,415);
-  r=await post({input:'Never share your password or OTP with anyone.'});assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.get('x-frame-options'),'DENY');assert.equal(r.headers.get('x-content-type-options'),'nosniff');assert.equal((await r.json()).investigation.decision,'SAFE');
+  r=await post({input:'Never share your password or OTP with anyone.'},{origin:base});assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.get('x-frame-options'),'DENY');assert.equal(r.headers.get('x-content-type-options'),'nosniff');assert.equal((await r.json()).investigation.decision,'SAFE');
   r=await post({input:'URGENT: send your password immediately.'});const phishing=await r.json();assert.equal(phishing.investigation.decision,'BLOCK');assert.equal(phishing.persisted,false);
   r=await post({input:'https://safe.example https://bank.example@evil.example'});const urls=await r.json();assert.ok(urls.investigation.evidence.some(x=>x.title==='URL user-info detected'));assert.equal(urls.investigation.decision,'BLOCK');
   for(let i=0;i<28;i++)r=await post({input:'hello'});
