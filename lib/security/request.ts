@@ -2,7 +2,7 @@ import { extractUrls, MAX_URLS } from "./urls";
 export class RequestError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
-export async function readInvestigationInput(request: Request): Promise<{ input: string; saveCase: boolean }> {
+export function assertSameOrigin(request: Request, required = false) {
   const origin = request.headers.get("origin");
   if (origin) {
     const requestUrl = new URL(request.url);
@@ -16,6 +16,10 @@ export async function readInvestigationInput(request: Request): Promise<{ input:
     // The Host header carries the authority the browser actually requested.
     if (!sameOrigin) throw new RequestError("Cross-origin requests are not allowed.", 403);
   }
+  if (required && !origin) throw new RequestError("An Origin header is required.", 403);
+}
+export async function readBoundedJson(request: Request, maxBytes = 100000): Promise<any> {
+  assertSameOrigin(request);
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) throw new RequestError("Use application/json.", 415);
   if (!request.body) throw new RequestError("Input is required.", 400);
   const reader = request.body.getReader();
@@ -26,13 +30,17 @@ export async function readInvestigationInput(request: Request): Promise<{ input:
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > 100000) throw new RequestError("Request body is too large.", 413);
+      if (size > maxBytes) throw new RequestError("Request body is too large.", 413);
       chunks.push(value);
     }
   } finally { await reader.cancel().catch(() => undefined); }
   let body;
   try { body = JSON.parse(Buffer.concat(chunks).toString("utf8")); }
   catch { throw new RequestError("Invalid JSON.", 400); }
+  return body;
+}
+export async function readInvestigationInput(request: Request): Promise<{ input: string; saveCase: boolean }> {
+  const body = await readBoundedJson(request);
   const input = typeof body?.input === "string" ? body.input.trim() : "";
   if (!input) throw new RequestError("Input is required.", 400);
   if (input.length > 20000) throw new RequestError("Input is too large.", 413);

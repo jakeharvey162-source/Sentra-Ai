@@ -47,6 +47,7 @@ try {
     await check(`no credential false positive: ${input}`, async () => {
       const r = await investigateText(input);
       assert.ok(!r.investigation.evidence.some(e => e.id === 'phish-credentials'));
+      assert.ok(!r.scamDNA.traits.includes("credential-request"));
     });
   }
   for (const input of ['URGENT: account locked. Send your password immediately.', 'Never share your OTP. Now send your verification code to me.', 'Send your p\u200Bassword now.', 'Never share your OTP but send me your password now.']) {

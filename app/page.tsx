@@ -216,6 +216,7 @@ export default function Home() {
           <a href="#investigate" className="transition hover:text-white">Product</a>
           <a href="#team" className="transition hover:text-white">How it works</a>
           <a href="#protect" className="transition hover:text-white">Protect My App</a>
+          <a href="/connections" className="transition hover:text-white">Connections</a>
           <a href="/auth" className="transition hover:text-white">Account</a>
         </nav>
 
@@ -225,7 +226,7 @@ export default function Home() {
             local checks ready
           </div>
           <a
-            href="/auth" className="mr-2 text-xs text-white/65 md:hidden">Account</a>
+            href="/connections" className="mr-2 text-xs text-white/65 md:hidden">Connect</a>
           <a href="#investigate"
             className="rounded-full bg-[#caff46] px-4 py-2 text-[11px] font-semibold text-black transition hover:brightness-110"
           >

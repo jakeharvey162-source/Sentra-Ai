@@ -113,3 +113,36 @@ test("optional provider failure leaves local verdict usable", async ({ page }) =
   await expect(page.getByText("AI provider unavailable.")).toBeVisible();
   await expect(page.getByText("SAFE", { exact: true })).toBeVisible();
 });
+
+test("connections require sign-in and do not advertise unconfigured OAuth", async ({ page }) => {
+  await page.goto("/connections");
+  await expect(page.getByRole("heading", { name: "Catch threats where they arrive." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in to connect your accounts" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Connect Gmail", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Scan recent messages", exact: true })).toBeDisabled();
+});
+
+test("connected scan consent, stale-result clearing and disconnect work with fixtures", async ({ page }) => {
+  let disconnected = false;
+  const posts: Record<string, unknown>[] = [];
+  await page.route("**/api/connections", async route => {
+    if (route.request().method() === "GET") return route.fulfill({ json: { platforms: [{id:"gmail",ready:true},{id:"slack",ready:false},{id:"outlook",ready:false}], accounts: disconnected ? [] : [{id:"ca_fixture",provider:"gmail",status:"ACTIVE"}] } });
+    const body = route.request().postDataJSON(); posts.push(body);
+    if (body.action === "disconnect") { disconnected = true; return route.fulfill({json:{disconnected:true}}); }
+    return route.fulfill({json:{scanned:1,checkedAt:new Date().toISOString(),coverage:"Fixture: latest messages only.",findings:[{id:"msg1",title:"<img src=x onerror=alert(1)>",sender:"scammer@example.com",decision:"BLOCK",score:90,explanation:"Credential pressure detected.",incomplete:false,evidence:[{title:"Credential request detected",detail:"Message asks for credentials.",severity:"high"}]}]}});
+  });
+  await page.goto("/connections");
+  await page.getByRole("combobox", { name: "Account to scan" }).selectOption("ca_fixture");
+  const scan=page.getByRole("button",{name:"Scan recent messages",exact:true});
+  await expect(scan).toBeDisabled();
+  await page.getByRole("checkbox", {name:/I agree to connect through Composio/}).check();
+  await scan.click();
+  await expect(page.getByText("BLOCK · 90/100",{exact:true})).toBeVisible();
+  await expect(page.locator("img[src=x]")).toHaveCount(0);
+  expect(posts[0]).toEqual({action:"scan",accountId:"ca_fixture",channel:"",consent:true});
+  await page.getByRole("checkbox", {name:/I agree to connect through Composio/}).uncheck();
+  await expect(page.getByRole("region",{name:"Connected scan results"})).toHaveCount(0);
+  await page.getByRole("button", {name:"Disconnect",exact:true}).click();
+  await expect(page.getByText("No connected accounts yet.")).toBeVisible();
+  expect(posts[1]).toEqual({action:"disconnect",accountId:"ca_fixture"});
+});

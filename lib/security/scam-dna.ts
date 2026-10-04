@@ -23,9 +23,8 @@ export function buildScamDNA(input: string, evidence: EvidenceSignal[]): ScamDNA
   }
 
   if (/https?:\/\//i.test(input)) traits.add("contains-url");
-  if (/(urgent|immediately|act now|suspended|locked)/i.test(input)) traits.add("urgency");
-  if (/(otp|password|pin|verification code)/i.test(input)) traits.add("credential-request");
-  if (/(gift card|crypto|wallet|bank transfer)/i.test(input)) traits.add("payment-request");
+  if (evidence.some(signal => signal.id === "phish-credentials")) traits.add("credential-request");
+  if (evidence.some(signal => signal.id === "phish-payment")) traits.add("payment-request");
 
   const ordered = [...traits].sort();
   const fingerprint = hashString(ordered.join("|") || "no-strong-traits");

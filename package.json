@@ -9,7 +9,8 @@
     "test:security": "node tests/security-core.mjs",
     "test:e2e": "playwright test",
     "shannon:import": "node scripts/import-shannon-sarif.mjs",
-    "test:http": "node tests/production-api.mjs"
+    "test:http": "node tests/production-api.mjs",
+    "test:connectors": "node tests/connectors.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.5.4",
