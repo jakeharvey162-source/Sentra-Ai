@@ -34,6 +34,9 @@ jobs:
       - name: Test connector ownership and OAuth security
         run: npm run test:connectors
 
+      - name: Test distributed rate limiting
+        run: npm run test:rate
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

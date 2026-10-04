@@ -12,6 +12,7 @@ try {
   const c = require(join(dir,'connectors/composio.js'));
   const { connectionAction } = require(join(dir,'connectors/service.js'));
   const { assertSameOrigin, readBoundedJson } = require(join(dir,'security/request.js'));
+  delete process.env.SENTRA_SERVER_SECRET; delete process.env.VERCEL;
   process.env.COMPOSIO_API_KEY='fixture-key-only';
   process.env.COMPOSIO_CALLBACK_VERIFICATION_ENABLED='true';
   process.env.COMPOSIO_READ_ONLY_SCOPES_VERIFIED='true';
