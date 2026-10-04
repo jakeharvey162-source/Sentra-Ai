@@ -1,0 +1,27 @@
+[
+  {
+    "name": "harmless-message",
+    "input": "Hi, can we meet tomorrow at 2pm to discuss the project?",
+    "expectedMaxDecision": "VERIFY"
+  },
+  {
+    "name": "urgent-credential-request",
+    "input": "URGENT: your account is locked. Sign in immediately and send your verification code.",
+    "expectedMinDecision": "VERIFY"
+  },
+  {
+    "name": "urgent-payment-scam",
+    "input": "Urgent payment required immediately. Send the bank transfer now to avoid suspension.",
+    "expectedMinDecision": "HOLD"
+  },
+  {
+    "name": "raw-ip-link",
+    "input": "Open http://192.0.2.10/login and sign in now.",
+    "expectedMinDecision": "VERIFY"
+  },
+  {
+    "name": "url-userinfo-obfuscation",
+    "input": "Open https://trusted.example@evil.example/login immediately.",
+    "expectedMinDecision": "VERIFY"
+  }
+]
