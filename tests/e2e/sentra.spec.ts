@@ -5,7 +5,7 @@ test("home page loads and core navigation is visible", async ({ page }) => {
   await expect(page).toHaveTitle(/Sentra AI/);
   await expect(page.getByText("Don\'t trust blindly.")).toBeVisible();
   await expect(page.getByRole("button", { name: /Run Cyber Team/i })).toBeDisabled();
-  await expect(page.getByText("Protect My App")).toBeVisible();
+  await expect(page.locator("#protect").getByText("Protect My App", { exact: true })).toBeVisible();
   await expect(page.getByText("Cyber Team", { exact: true }).first()).toBeVisible();
 });
 
@@ -17,7 +17,7 @@ test("harmless message completes an investigation", async ({ page }) => {
 
   await expect(page.getByText("Cyber Jury decision")).toBeVisible();
   await expect(page.getByText("SAFE", { exact: true })).toBeVisible();
-  await expect(page.getByText("Scam DNA")).toBeVisible();
+  await expect(page.getByText("Scam DNA", { exact: true })).toBeVisible();
 });
 
 test("phishing-style message produces evidence and a blocking verdict", async ({ page }) => {
