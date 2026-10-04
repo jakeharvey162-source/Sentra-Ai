@@ -1,0 +1,32 @@
+{
+  "name": "sentra-ai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test:security": "node tests/security-core.mjs",
+    "test:e2e": "playwright test",
+    "shannon:import": "node scripts/import-shannon-sarif.mjs"
+  },
+  "dependencies": {
+    "framer-motion": "^11.5.4",
+    "lucide-react": "^0.468.0",
+    "next": "16.3.8",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "@supabase/ssr": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "@playwright/test": "1.63.0"
+  }
+}
