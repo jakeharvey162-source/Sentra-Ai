@@ -141,7 +141,7 @@ Current:
 
 Optional future/live integrations:
 
-- Google Web Risk
+- Phishing.Database active phishing feed (free GitHub-hosted threat intelligence)
 - VirusTotal
 - URLhaus
 - PhishTank
@@ -191,7 +191,6 @@ NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 Optional threat-intelligence variables:
 
 ```bash
-GOOGLE_WEB_RISK_API_KEY=
 VIRUSTOTAL_API_KEY=
 ```
 
