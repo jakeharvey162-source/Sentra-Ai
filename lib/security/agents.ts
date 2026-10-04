@@ -1,5 +1,6 @@
 import type { AgentFinding, EvidenceSignal, SentraDecision } from "./types";
 import { checkFreePhishingFeed } from "./free-threat-intel";
+import { extractUrls } from "./urls";
 
 export interface CyberAgent {
   id: string;
@@ -35,9 +36,15 @@ export class PhishingInvestigator implements CyberAgent {
 
   async evaluate(input: string): Promise<AgentFinding> {
     const evidence: EvidenceSignal[] = [];
-    const urgency = /(urgent|immediately|act now|suspended|locked)/i.test(input);
-    const credentials = /(password|otp|pin|verification code|login|sign in)/i.test(input);
-    const payment = /(pay|payment|bank transfer|gift card|crypto|wallet)/i.test(input);
+    const normalized = input.normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g, "");
+    const urgency = /\b(urgent|immediately|act now|suspended|locked)\b/i.test(normalized);
+    // Inspect sentences independently: a safety disclaimer must not hide a later request.
+    const credentials = normalized.split(/[.!?;\n]+/).some(sentence => {
+      const remainder = sentence.replace(/\b(?:never|do not|don't|won't|will never)\s+(?:\w+\s+){0,3}(?:share|send|give|disclose|ask|request)\s+(?:\w+\s+){0,3}(?:password|otp|pin|verification code)(?:\s+(?:or|and)\s+(?:password|otp|pin|verification code))?/gi, "");
+      return /\b(password|otp|pin|verification code|login|sign in)\b/i.test(remainder)
+        && /\b(send|share|enter|provide|give|confirm|verify|sign in|log ?in)\b/i.test(remainder);
+    });
+    const payment = /\b(pay|payment|bank transfer|gift card|crypto|wallet)\b/i.test(normalized);
 
     if (urgency) evidence.push(signal(
       "phish-urgency",
@@ -94,15 +101,15 @@ export class UrlInvestigator implements CyberAgent {
   async evaluate(input: string): Promise<AgentFinding> {
     const evidence: EvidenceSignal[] = [];
     evidence.push(...(await checkFreePhishingFeed(input)));
-    const match = input.match(/https?:\/\/[^\s]+/i);
+    const urls = extractUrls(input);
 
-    if (match) {
+    for (const [index, value] of urls.entries()) {
       try {
-        const url = new URL(match[0]);
+        const url = new URL(value);
         const host = url.hostname.toLowerCase();
 
-        if (host.startsWith("xn--")) evidence.push(signal(
-          "url-punycode",
+        if (host.split(".").some(label => label.startsWith("xn--"))) evidence.push(signal(
+          `url-punycode-${index}`,
           this.name,
           "Punycode domain detected",
           "Punycode can be legitimate but is also used for look-alike domains.",
@@ -114,7 +121,7 @@ export class UrlInvestigator implements CyberAgent {
         ));
 
         if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) evidence.push(signal(
-          "url-ip-host",
+          `url-ip-host-${index}`,
           this.name,
           "Raw IP address used as host",
           "The link uses a numeric IP address instead of a domain name.",
@@ -126,7 +133,7 @@ export class UrlInvestigator implements CyberAgent {
         ));
 
         if (url.username || url.password) evidence.push(signal(
-          "url-userinfo",
+          `url-userinfo-${index}`,
           this.name,
           "URL user-info detected",
           "User-info in a URL can obscure the true destination.",
@@ -138,7 +145,7 @@ export class UrlInvestigator implements CyberAgent {
         ));
       } catch {
         evidence.push(signal(
-          "url-malformed",
+          `url-malformed-${index}`,
           this.name,
           "Malformed URL",
           "A URL-like value was present but could not be parsed safely.",

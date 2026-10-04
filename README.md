@@ -47,7 +47,7 @@ Database tables:
 
 Both tables have Row Level Security enabled with owner-scoped SELECT, INSERT, UPDATE and DELETE policies.
 
-Unauthenticated visitors can still run the local deterministic investigation layer; authenticated users can persist supported investigations.
+Unauthenticated visitors can still run the local deterministic investigation layer; authenticated users can explicitly opt in to persist supported investigations. Case previews are not saved by default.
 
 ### Protect My App
 
@@ -170,7 +170,7 @@ Requirements:
 - npm
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
@@ -209,6 +209,7 @@ Browser user flows:
 ```bash
 npx playwright install chromium
 npm run build
+npm run test:http
 npm run test:e2e
 ```
 
@@ -270,3 +271,13 @@ The ForgeHacks demo will show real executed functionality only.
 ---
 
 **Sentra AI — Evidence before confidence.**
+
+## October 4 security hardening
+
+See [the assessment](test-lab/SECURITY-ASSESSMENT-2026-10-04.md) for reproduced failures, fixes, executed checks and remaining gaps. The security suite compiles and tests the actual TypeScript implementation with isolated feed fixtures, rather than copying implementation logic into tests.
+
+AI Council is experimental. It uses explicit consent, case snapshots, system/user message separation, plain-text rendering, bounded output and timeouts. Its SDK is loaded only on opt-in. Model availability and live reviewer quality require a real provider-account test; local rules are not a trained ML model.
+
+Protect My App is an experimental workflow, not a shipped web scanner. Identity and media investigators are planned. UI labels reflect these boundaries.
+
+ForgeHacks' released cybersecurity prompt focuses on helping people recognize, prevent, verify or respond to scams, impersonation and fraud enabled by AI or modern technologies. Sentra's message/URL investigation addresses that scope; judges must also see real model-backed review to assess AI use. See [the submission checklist](test-lab/FORGEHACKS-READINESS.md).

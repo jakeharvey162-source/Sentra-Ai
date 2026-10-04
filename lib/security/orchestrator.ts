@@ -16,7 +16,7 @@ export async function investigateText(input: string) {
   const decision = jury.decision;
 
   const investigation: InvestigationCase = {
-    id: `S-${Date.now().toString(36).toUpperCase()}`,
+    id: `S-${crypto.randomUUID().toUpperCase()}`,
     kind: /https?:\/\//i.test(input) ? "url" : "message",
     inputPreview: input.slice(0, 180),
     createdAt: new Date().toISOString(),

@@ -24,6 +24,7 @@ export default function AuthPage() {
       return;
     }
 
+    try {
     const result = mode === "login"
       ? await supabase.auth.signInWithPassword({ email, password })
       : await supabase.auth.signUp({ email, password });
@@ -35,7 +36,8 @@ export default function AuthPage() {
     } else {
       setMessage("Account created. Check your email if confirmation is enabled.");
     }
-    setBusy(false);
+    } catch { setMessage("Unable to reach sign-in service. Please try again."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -74,7 +76,7 @@ export default function AuthPage() {
 
         {message && <p className="mt-4 text-sm text-slate-300">{message}</p>}
 
-        <button onClick={() => setMode(mode === "login" ? "signup" : "login")} className="mt-5 text-sm text-blue-300">
+        <button disabled={busy} onClick={() => { setMessage(""); setMode(mode === "login" ? "signup" : "login"); }} className="mt-5 text-sm text-blue-300">
           {mode === "login" ? "Need an account? Sign up" : "Already have an account? Sign in"}
         </button>
       </div>

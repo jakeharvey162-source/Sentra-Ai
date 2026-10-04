@@ -1,5 +1,8 @@
 name: Sentra CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches:
@@ -20,7 +23,7 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
@@ -36,6 +39,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
         run: npm run build
+
+      - name: Test production HTTP security boundaries
+        run: npm run test:http
 
       - name: Run browser user-flow tests
         env:
