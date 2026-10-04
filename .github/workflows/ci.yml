@@ -43,6 +43,13 @@ jobs:
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
         run: npm run test:e2e
 
+      - name: Upload Sentra preview screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentra-preview
+          path: artifacts/sentra-current-desktop.png
+          if-no-files-found: error
+
       - name: Check repository for committed secrets
         run: |
           if grep -RInE "(sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{20,}|ghp_[0-9A-Za-z]{20,})" . --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.next; then
