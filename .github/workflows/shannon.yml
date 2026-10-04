@@ -1,0 +1,96 @@
+name: Shannon Authorized Pentest
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Authorized Sentra staging URL"
+        required: true
+        type: string
+      authorization:
+        description: "Type I_AM_AUTHORIZED to confirm ownership/permission"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  pentest:
+    if: ${{ inputs.authorization == 'I_AM_AUTHORIZED' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout Sentra
+        uses: actions/checkout@v4
+
+      - name: Verify target scope
+        shell: bash
+        run: |
+          case "${{ inputs.target_url }}" in
+            https://*.vercel.app|https://sentra-*.vercel.app)
+              echo "Target appears to be a Vercel staging deployment."
+              ;;
+            *)
+              echo "Refusing automatic Shannon execution against a non-Vercel target."
+              echo "Use the documented local flow only when you have explicit authorization."
+              exit 1
+              ;;
+          esac
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check Shannon provider secret
+        shell: bash
+        env:
+          SHANNON_AI_API_KEY: ${{ secrets.SHANNON_AI_API_KEY }}
+        run: |
+          if [ -z "$SHANNON_AI_API_KEY" ]; then
+            echo "Missing SHANNON_AI_API_KEY GitHub Actions secret."
+            exit 1
+          fi
+
+      - name: Run Shannon against authorised Sentra staging
+        shell: bash
+        env:
+          SHANNON_AI_API_KEY: ${{ secrets.SHANNON_AI_API_KEY }}
+        run: |
+          echo "Shannon requires provider-specific setup. This workflow is intentionally gated."
+          echo "Target: ${{ inputs.target_url }}"
+          npx --yes @keygraph/shannon@latest start \
+            -u "${{ inputs.target_url }}" \
+            -r "$GITHUB_WORKSPACE"
+
+      - name: Locate Shannon SARIF
+        id: sarif
+        if: always()
+        shell: bash
+        run: |
+          file="$(find . -type f \( -name '*.sarif' -o -name '*sarif.json' \) | head -n 1)"
+          if [ -n "$file" ]; then
+            echo "file=$file" >> "$GITHUB_OUTPUT"
+            echo "Found SARIF: $file"
+          else
+            echo "No SARIF report found."
+          fi
+
+      - name: Normalize findings for Sentra Blue Team
+        if: steps.sarif.outputs.file != ''
+        run: npm run shannon:import -- "${{ steps.sarif.outputs.file }}"
+
+      - name: Upload Shannon evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shannon-sentra-pentest
+          path: |
+            test-lab/results/shannon-normalized.json
+            **/*.sarif
+            **/*shannon*.md
+            **/*shannon*.pdf
+          if-no-files-found: warn
