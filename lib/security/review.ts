@@ -26,11 +26,8 @@ export function runChallenger(findings: AgentFinding[], decision: SentraDecision
     counterEvidence.push("Specialist recommendations disagree.");
   }
 
-  const index = order.indexOf(decision);
-  const adjustedDecision =
-    counterEvidence.length > 0 && index > 0 && decision !== "BLOCK"
-      ? order[Math.max(0, index - 1)]
-      : decision;
+  // Missing evidence from another specialist cannot downgrade an observed threat.
+  const adjustedDecision = decision;
 
   return {
     challenged: counterEvidence.length > 0,
@@ -67,7 +64,7 @@ export function runCyberJury(findings: AgentFinding[], fallback: SentraDecision)
   const total = findings.length || 1;
   return {
     votes,
-    decision,
+    decision: order.indexOf(decision) < order.indexOf(fallback) ? fallback : decision,
     confidence: Math.max(0.5, maxVotes / total),
   };
 }

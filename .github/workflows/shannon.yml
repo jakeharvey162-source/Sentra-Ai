@@ -28,17 +28,18 @@ jobs:
 
       - name: Verify target scope
         shell: bash
+        env:
+          TARGET_URL: ${{ inputs.target_url }}
         run: |
-          case "${{ inputs.target_url }}" in
-            https://*.vercel.app|https://sentra-*.vercel.app)
-              echo "Target appears to be a Vercel staging deployment."
-              ;;
-            *)
-              echo "Refusing automatic Shannon execution against a non-Vercel target."
-              echo "Use the documented local flow only when you have explicit authorization."
-              exit 1
-              ;;
-          esac
+          python3 - <<'PY_SCOPE'
+          import os
+          from urllib.parse import urlsplit
+          target = urlsplit(os.environ["TARGET_URL"])
+          if (target.scheme != "https" or target.hostname != "sentra-ai-7lij.vercel.app"
+              or target.username or target.password or target.port not in (None, 443)
+              or target.path not in ("", "/") or target.query or target.fragment):
+              raise SystemExit("Refusing target outside the authorised Sentra origin.")
+          PY_SCOPE
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -59,11 +60,12 @@ jobs:
         shell: bash
         env:
           SHANNON_AI_API_KEY: ${{ secrets.SHANNON_AI_API_KEY }}
+          TARGET_URL: ${{ inputs.target_url }}
         run: |
           echo "Shannon requires provider-specific setup. This workflow is intentionally gated."
-          echo "Target: ${{ inputs.target_url }}"
+          printf 'Target: %s\n' "$TARGET_URL"
           npx --yes @keygraph/shannon@latest start \
-            -u "${{ inputs.target_url }}" \
+            -u "$TARGET_URL" \
             -r "$GITHUB_WORKSPACE"
 
       - name: Locate Shannon SARIF

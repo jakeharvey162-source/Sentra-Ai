@@ -1,15 +1,23 @@
 import { NextResponse } from "next/server";
 import { investigateText } from "@/lib/security/orchestrator";
+import { readInvestigationInput, RequestError, allowInvestigation } from "@/lib/security/request";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const input = typeof body?.input === "string" ? body.input.trim() : "";
-
-  if (!input) return NextResponse.json({ error: "Input is required." }, { status: 400 });
-  if (input.length > 20000) return NextResponse.json({ error: "Input is too large." }, { status: 413 });
+  let input: string;
+  let saveCase = false;
+  try { ({ input, saveCase } = await readInvestigationInput(request)); }
+  catch (error) {
+    return NextResponse.json({ error: error instanceof RequestError ? error.message : "Invalid request." },
+      { status: error instanceof RequestError ? error.status : 400, headers: { "Cache-Control": "no-store" } });
+  }
+  const key = process.env.VERCEL ? request.headers.get("x-vercel-forwarded-for") ?? "unknown" : "local";
+  if (!allowInvestigation(key)) return NextResponse.json({ error: "Too many investigations. Try again in one minute." },
+    { status: 429, headers: { "Retry-After": "60", "Cache-Control": "no-store" } });
 
   const result = await investigateText(input);
+
+  if (!saveCase) return NextResponse.json({ ...result, persisted: false }, { headers: { "Cache-Control": "no-store" } });
 
   try {
     const supabase = await createClient();
@@ -32,8 +40,9 @@ export async function POST(request: Request) {
         .select("id")
         .single();
 
+      let evidenceSaved = true;
       if (!caseError && savedCase && result.investigation.evidence.length) {
-        await supabase.from("sentra_evidence").insert(
+        const { error: evidenceError } = await supabase.from("sentra_evidence").insert(
           result.investigation.evidence.map((item) => ({
             case_id: savedCase.id,
             user_id: user.id,
@@ -46,13 +55,14 @@ export async function POST(request: Request) {
             attack_technique_ids: item.attackTechniqueIds ?? [],
           }))
         );
+        evidenceSaved = !evidenceError;
       }
 
-      return NextResponse.json({ ...result, persisted: !caseError });
+      return NextResponse.json({ ...result, persisted: !caseError && evidenceSaved }, { headers: { "Cache-Control": "no-store" } });
     }
   } catch {
     // Public investigations remain usable when persistence is unavailable.
   }
 
-  return NextResponse.json({ ...result, persisted: false });
+  return NextResponse.json({ ...result, persisted: false }, { headers: { "Cache-Control": "no-store" } });
 }
