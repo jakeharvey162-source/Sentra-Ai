@@ -2,9 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { ShieldCheck } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export default function AuthPage() {
+  const configured = isSupabaseConfigured();
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,6 +17,12 @@ export default function AuthPage() {
     event.preventDefault();
     setBusy(true);
     setMessage("");
+
+    if (!supabase) {
+      setMessage("Supabase is not configured for this deployment yet.");
+      setBusy(false);
+      return;
+    }
 
     const result = mode === "login"
       ? await supabase.auth.signInWithPassword({ email, password })
@@ -49,12 +56,18 @@ export default function AuthPage() {
           Signing in lets Sentra save your investigations behind owner-only database policies.
         </p>
 
+        {!configured && (
+          <div className="mt-5 rounded-xl border border-amber-400/20 bg-amber-500/10 p-3 text-sm text-amber-200">
+            Authentication is temporarily unavailable because Supabase environment variables are not configured on this deployment.
+          </div>
+        )}
+
         <form onSubmit={submit} className="mt-6 space-y-3">
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="Email" className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-blue-400/40" />
           <input required minLength={8} type="password" value={password} onChange={(e) => setPassword(e.target.value)}
             placeholder="Password" className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-blue-400/40" />
-          <button disabled={busy} className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">
+          <button disabled={busy || !configured} className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">
             {busy ? "Working..." : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
