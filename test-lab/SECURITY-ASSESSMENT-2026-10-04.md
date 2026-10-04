@@ -61,3 +61,6 @@ Live rollback-only fixtures passed atomic save, cross-user case/evidence isolati
 Rollout: deploy the updated API before revoking direct INSERT/UPDATE table grants. Retain owner-scoped SELECT/DELETE. Provision the secret outside version control; never place its value in a migration.
 
 Strix 1.6.2 installed; local quick scan stopped before testing because Docker is unavailable. Cloud login was rejected by automatic approval review for persistent account and domain-management permissions. No Strix vulnerabilities or successful pentest are claimed. A bounded scan of only the owned hostname still requires an appropriate runtime/account authorization.
+
+
+Rollout completed: PR #4 merged at be18d1399a91a32668f4d28d2850568ec562acf9; GitHub run 37232541205 passed all steps. Vercel deployment dpl_JBHiCAXV7bieXyDQMCpNVh6nocFP reached READY and production alias updated. Live API samples returned SAFE/0 and BLOCK/72 with persisted=false. Applied `20261004203721_sentra_api_only_storage`; checked authenticated INSERT denied on both tables and owner DELETE retained. Temporary test users are absent.
