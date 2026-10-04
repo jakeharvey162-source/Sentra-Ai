@@ -45,7 +45,7 @@ Database tables:
 - `sentra_cases`
 - `sentra_evidence`
 
-Both tables have Row Level Security enabled with owner-scoped SELECT, INSERT, UPDATE and DELETE policies.
+Both tables have Row Level Security enabled. Owner-scoped SELECT and DELETE remain available to signed-in users. Direct INSERT and UPDATE grants are revoked; saving uses an atomic, authenticated server-authorized operation with a daily quota. Evidence has a composite case/owner foreign key.
 
 Unauthenticated visitors can still run the local deterministic investigation layer; authenticated users can explicitly opt in to persist supported investigations. Case previews are not saved by default.
 
@@ -287,3 +287,18 @@ ForgeHacks' released cybersecurity prompt focuses on helping people recognize, p
 Open `/connections` to manage Composio account connections and scan recent Gmail, Outlook or Slack messages. Optional checks repeat every minute while the page is open. Credentials remain with Composio; scanning does not send, delete or modify messages and does not send mailbox content to the AI Council.
 
 **Activation required:** connection buttons remain disabled until the administrator configures the Composio project key, platform auth configs, callback identity verifier and read scopes. See [setup, security boundaries and live-test checklist](test-lab/CONNECTED-PROTECTION.md). Fixture-tested adapters are not proof of live OAuth, background monitoring or full mailbox coverage.
+
+
+## Public launch status — October 4, 2026
+
+Working alpha, not yet verified for worldwide production use. PR #4 passed production dependency audit, 30 security regressions, 19 connector fixture checks, 6 rate checks, HTTP boundaries, 26 desktop/mobile browser tests, build/type checks and secret scanning. Production deployment was verified with normal and malicious sample investigations; live DB rollback fixtures proved ownership isolation and forged-capability denial.
+
+Still required before broad launch: real Gmail/Outlook/Slack OAuth and minimum-scope verification, genuine model-backed AI Council testing, account/history/deletion controls, operational monitoring and incident handling, privacy/retention documentation, measured load tests, accessibility and multilingual detector evaluation. Development-only dependency advisories remain documented in the security assessment.
+
+Strix 1.6.2 is installed but has not completed a scan. Docker is missing locally; cloud login was blocked by automatic approval review over persistent account/domain-management access. Do not describe the app as Strix-certified or vulnerability-free.
+
+Pitch production script: [four-minute script](test-lab/FOUR-MINUTE-PITCH.md). A 240-second silent visual draft was rendered with Higgsfield; final narration, real app footage and Sparki editing remain pending authorization. The AI-track demonstration must show actual trained-model use.
+
+### Database secret provisioning
+
+Apply the Sentra migrations to a Supabase project containing the case tables. Generate a cryptographically random 32-byte server secret (64 lowercase hex characters), store it as `SENTRA_SERVER_SECRET` in deployment environment variables, and insert only its SHA-256 hash into `sentra_private.server_config` as the sole `id=true` row using an administrator connection. Never expose the value in browser variables, SQL migration files, logs or Git. Configure the matching public Supabase URL and publishable key. Deploy the updated API before applying `sentra_api_only_storage`. Production quota failures return 503 rather than silently bypassing limits.
