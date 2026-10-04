@@ -103,5 +103,19 @@ try {
     assert.equal(evidence[0].title, 'Threat intelligence unavailable');
     assert.equal(evidence[0].weight, 0);
   });
+  await check('current-sized 11MB community feed fits the bounded reader', async () => {
+    delete require.cache[require.resolve(join(compiled, 'free-threat-intel.js'))];
+    const feed = require(join(compiled, 'free-threat-intel.js'));
+    globalThis.fetch = async () => new Response('bad.example\n' + ('# fixture padding\n').repeat(650000));
+    const domains = await feed.loadActivePhishingDomains();
+    assert.ok(domains?.has('bad.example'));
+  });
+  await check('oversized community feed is rejected without a partial clean result', async () => {
+    delete require.cache[require.resolve(join(compiled, 'free-threat-intel.js'))];
+    const feed = require(join(compiled, 'free-threat-intel.js'));
+    globalThis.fetch = async () => new Response('bad.example\n' + '#'.repeat(17 * 1024 * 1024));
+    assert.equal(await feed.loadActivePhishingDomains(), null);
+    assert.equal((await feed.checkFreePhishingFeed('https://example.test'))[0].title, 'Threat intelligence unavailable');
+  });
   console.log(`${passed} security regression checks passed against compiled implementation.`);
 } finally { rmSync(compiled, { recursive: true, force: true }); }

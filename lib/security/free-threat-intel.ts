@@ -11,7 +11,7 @@ export async function loadActivePhishingDomains(): Promise<Set<string> | null> {
   if (pending) return pending;
   pending = (async () => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2500);
+    const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       const response = await fetch(FEED_URL, { signal: controller.signal, cache: "no-store", redirect: "error" });
       if (!response.ok || !response.body) throw new Error("Feed unavailable");
@@ -23,7 +23,7 @@ export async function loadActivePhishingDomains(): Promise<Set<string> | null> {
           const { done, value } = await reader.read();
           if (done) break;
           size += value.byteLength;
-          if (size > 8 * 1024 * 1024) throw new Error("Feed exceeds limit");
+          if (size > 16 * 1024 * 1024) throw new Error("Feed exceeds limit");
           chunks.push(value);
         }
       } finally { await reader.cancel().catch(() => undefined); }

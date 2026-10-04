@@ -115,7 +115,7 @@ function message(id: unknown, title: string, sender: string, body: string, clipp
   const combined = `${title}\n${sender}\n${body}`;
   return { id: text(id, 200), title, sender, text: combined.slice(0, 20000), truncated: clipped || combined.length > 20000 || extractUrls(combined).length > MAX_URLS };
 }
-export async function readMessages(account: Account, channel?: string, signal = AbortSignal.timeout(40000)): Promise<Message[]> {
+export async function readMessages(account: Account, channel?: string, signal = AbortSignal.timeout(30000)): Promise<Message[]> {
   if (account.provider === "gmail") {
     const list = await proxy(account.id, "https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10&labelIds=INBOX", signal);
     const items = (Array.isArray(list.messages) ? list.messages : []).slice(0, 10);
