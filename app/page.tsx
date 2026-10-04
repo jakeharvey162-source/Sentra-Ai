@@ -190,6 +190,26 @@ export default function Home() {
         </div>
 
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.1 }} className="relative">
+          <div className="pointer-events-none absolute -right-10 -top-24 hidden size-72 place-items-center lg:grid" aria-hidden="true">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+              className="absolute size-56 rounded-full border border-blue-300/20"
+            />
+            <motion.div
+              animate={{ rotate: -360 }}
+              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+              className="absolute size-44 rotate-45 rounded-full border border-violet-300/25"
+            />
+            <motion.div
+              animate={{ scale: [0.94, 1.05, 0.94], opacity: [0.55, 0.9, 0.55] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute size-28 rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,.72),rgba(90,135,255,.45)_14%,rgba(93,58,255,.32)_42%,rgba(4,8,18,.12)_70%)] shadow-[0_0_70px_rgba(82,115,255,.42)]"
+            />
+            <div className="absolute size-36 rounded-full border border-cyan-200/10 [transform:rotateX(68deg)]" />
+            <div className="absolute size-36 rounded-full border border-violet-200/10 [transform:rotateY(68deg)]" />
+            <div className="absolute bottom-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[9px] uppercase tracking-[0.28em] text-blue-200/70 backdrop-blur">Sentra Core</div>
+          </div>
           <div className="absolute -inset-6 rounded-[36px] bg-blue-500/10 blur-3xl" />
           <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#0a0f17]/90 p-5 shadow-2xl backdrop-blur-xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
