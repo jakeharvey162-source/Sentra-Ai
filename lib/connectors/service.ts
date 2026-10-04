@@ -1,4 +1,5 @@
-import { allowInvestigation, RequestError } from "../security/request";
+import { RequestError } from "../security/request";
+import { enforceRateLimit } from "../server/rate-limit";
 import { investigateText } from "../security/orchestrator";
 import { configured, getAccount, linkAccount, readMessages, composio } from "./composio";
 import { isProvider } from "./providers";
@@ -8,7 +9,7 @@ export async function connectionAction(body: unknown, userId: string) {
   const b = body as Record<string, unknown>;
   if (!["link", "scan", "disconnect"].includes(String(b.action))) throw new RequestError("Unknown connection action.", 400);
   if (!configured()) throw new RequestError("Connections are awaiting administrator setup.", 503);
-  if (!allowInvestigation(`connections:${userId}`)) throw new RequestError("Too many connection requests. Retry in one minute.", 429);
+  await enforceRateLimit("connect", userId);
   if (b.action === "link") {
     if (!isProvider(b.provider) || b.consent !== true) throw new RequestError("Choose a platform and accept connection consent.", 400);
     return linkAccount(userId, b.provider);

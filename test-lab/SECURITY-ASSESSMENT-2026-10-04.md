@@ -50,3 +50,14 @@ No finite test suite establishes that every flaw has been eliminated.
 ## Browser-CI correction
 
 The first browser run caught a legitimate-request rejection introduced by comparing Origin to Next.js' internal request URL. Reproduced with a real Origin header on the built server; fixed using the requested Host authority and covered in both module and HTTP tests. One ambiguous Protect My App selector was also made exact. The browser suite must pass on the corrected commit before merging.
+
+
+## Public launch hardening follow-up
+
+Added shared, capability-protected Supabase rate buckets (30 investigations/minute, 6 connector actions/minute, 20 saved cases/day). HMAC identifiers avoid storing raw IP addresses. Production fails closed if quota infrastructure is unavailable. Case + evidence saving now uses one server-authorized atomic RPC. A composite parent/owner foreign key prevents attaching owned evidence to another user's case. Text/array limits bound stored payloads.
+
+Live rollback-only fixtures passed atomic save, cross-user case/evidence isolation, parent-owner enforcement, forged capability rejection, anonymous isolation, and the 30-request quota. Fixtures were rolled back. SECURITY DEFINER functions intentionally have narrowly granted execution and validate the secret before quota access; saving additionally requires a non-anonymous auth.uid. Private tables have no client policies or grants.
+
+Rollout: deploy the updated API before revoking direct INSERT/UPDATE table grants. Retain owner-scoped SELECT/DELETE. Provision the secret outside version control; never place its value in a migration.
+
+Strix 1.6.2 installed; local quick scan stopped before testing because Docker is unavailable. Cloud login was rejected by automatic approval review for persistent account and domain-management permissions. No Strix vulnerabilities or successful pentest are claimed. A bounded scan of only the owned hostname still requires an appropriate runtime/account authorization.
