@@ -6,7 +6,7 @@ test("home page loads and core navigation is visible", async ({ page }) => {
   await expect(page.getByText("Don\'t trust blindly.")).toBeVisible();
   await expect(page.getByRole("button", { name: /Run Cyber Team/i })).toBeDisabled();
   await expect(page.locator("#protect").getByText("Protect My App", { exact: true })).toBeVisible();
-  await expect(page.getByText("Cyber Team", { exact: true }).first()).toBeVisible();
+  await expect(page.locator("#team").getByText("Cyber Team", { exact: true })).toBeVisible();
 });
 
 test("harmless message completes an investigation", async ({ page }) => {
