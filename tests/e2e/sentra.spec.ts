@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("home page loads and core navigation is visible", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Sentra AI/);
-  await expect(page.getByText("Don\'t trust blindly.")).toBeVisible();
+  await expect(page.getByText("Security is mostly")).toBeVisible();
   await expect(page.getByRole("button", { name: /Run Cyber Team/i })).toBeDisabled();
   await expect(page.locator("#protect").getByText(/protect my app/i)).toBeVisible();
   await expect(page.locator("#team").getByText("Most cyber defense is")).toBeVisible();
@@ -50,7 +50,6 @@ test("auth page is usable", async ({ page }) => {
   await page.getByText("Need an account? Sign up").click();
   await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
 });
-
 
 test("capture current Sentra desktop preview", async ({ page }) => {
   await page.goto("/");
