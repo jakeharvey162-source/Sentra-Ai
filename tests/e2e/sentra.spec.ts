@@ -50,3 +50,13 @@ test("auth page is usable", async ({ page }) => {
   await page.getByText("Need an account? Sign up").click();
   await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
 });
+
+
+test("capture current Sentra desktop preview", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByPlaceholder("Paste a suspicious message or URL...");
+  await input.fill("URGENT: your account is locked. Sign in immediately and send your verification code.");
+  await page.getByRole("button", { name: /Run Cyber Team/i }).click();
+  await expect(page.getByText("BLOCK", { exact: true })).toBeVisible();
+  await page.screenshot({ path: "artifacts/sentra-current-desktop.png", fullPage: true });
+});
