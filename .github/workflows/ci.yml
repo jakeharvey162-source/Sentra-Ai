@@ -26,6 +26,9 @@ jobs:
         run: npm run test:security
 
       - name: Build application
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
         run: npm run build
 
       - name: Check repository for committed secrets
