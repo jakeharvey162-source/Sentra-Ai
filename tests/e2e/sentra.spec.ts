@@ -17,7 +17,7 @@ test("harmless message completes an investigation", async ({ page }) => {
 
   await expect(page.getByText("Cyber Jury", { exact: true })).toBeVisible();
   await expect(page.getByText("SAFE", { exact: true })).toBeVisible();
-  await expect(page.getByText("Scam DNA", { exact: true })).toBeVisible();
+  await expect(page.getByText("Scam DNA", { exact: true }).last()).toBeVisible();
 });
 
 test("phishing-style message produces evidence and a blocking verdict", async ({ page }) => {
