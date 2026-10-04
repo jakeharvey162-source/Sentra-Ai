@@ -281,3 +281,9 @@ AI Council is experimental. It uses explicit consent, case snapshots, system/use
 Protect My App is an experimental workflow, not a shipped web scanner. Identity and media investigators are planned. UI labels reflect these boundaries.
 
 ForgeHacks' released cybersecurity prompt focuses on helping people recognize, prevent, verify or respond to scams, impersonation and fraud enabled by AI or modern technologies. Sentra's message/URL investigation addresses that scope; judges must also see real model-backed review to assess AI use. See [the submission checklist](test-lab/FORGEHACKS-READINESS.md).
+
+## Connected email and platform protection
+
+Open `/connections` to manage Composio account connections and scan recent Gmail, Outlook or Slack messages. Optional checks repeat every minute while the page is open. Credentials remain with Composio; scanning does not send, delete or modify messages and does not send mailbox content to the AI Council.
+
+**Activation required:** connection buttons remain disabled until the administrator configures the Composio project key, platform auth configs, callback identity verifier and read scopes. See [setup, security boundaries and live-test checklist](test-lab/CONNECTED-PROTECTION.md). Fixture-tested adapters are not proof of live OAuth, background monitoring or full mailbox coverage.

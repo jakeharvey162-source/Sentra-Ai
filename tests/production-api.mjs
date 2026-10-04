@@ -13,6 +13,11 @@ try {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   assert.ok(ready, output);
+  let connection=await fetch(base+'/api/connections');assert.equal(connection.status,401);assert.equal(connection.headers.get('cache-control'),'no-store');
+  connection=await fetch(base+'/api/connections',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});assert.equal(connection.status,403);
+  connection=await fetch(base+'/api/connections',{method:'POST',headers:{'content-type':'application/json',origin:base},body:JSON.stringify({action:'scan',accountId:'other',consent:true})});assert.equal(connection.status,401);
+  connection=await fetch(base+'/api/connections',{method:'POST',headers:{'content-type':'application/json',origin:base},body:'a'.repeat(5000)});assert.equal(connection.status,413);
+  const callback=await fetch(base+'/api/connections/callback?session_uri=forged',{redirect:'manual'});assert.equal(callback.status,303);assert.equal(callback.headers.get('location'),'https://sentra-ai-7lij.vercel.app/connections?connection=failed');assert.ok(!callback.headers.get('location').includes('forged'));
   const post=(body,headers={})=>fetch(base+'/api/investigate',{method:'POST',headers:{'content-type':'application/json',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
   let r=await post('{');assert.equal(r.status,400);
   r=await post({input:'hello'},{origin:'https://evil.test'});assert.equal(r.status,403);

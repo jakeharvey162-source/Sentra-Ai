@@ -47,6 +47,7 @@ try {
     await check(`no credential false positive: ${input}`, async () => {
       const r = await investigateText(input);
       assert.ok(!r.investigation.evidence.some(e => e.id === 'phish-credentials'));
+      assert.ok(!r.scamDNA.traits.includes("credential-request"));
     });
   }
   for (const input of ['URGENT: account locked. Send your password immediately.', 'Never share your OTP. Now send your verification code to me.', 'Send your p\u200Bassword now.', 'Never share your OTP but send me your password now.']) {
@@ -101,6 +102,20 @@ try {
     const evidence = await failedFeed.checkFreePhishingFeed('https://example.test');
     assert.equal(evidence[0].title, 'Threat intelligence unavailable');
     assert.equal(evidence[0].weight, 0);
+  });
+  await check('current-sized 11MB community feed fits the bounded reader', async () => {
+    delete require.cache[require.resolve(join(compiled, 'free-threat-intel.js'))];
+    const feed = require(join(compiled, 'free-threat-intel.js'));
+    globalThis.fetch = async () => new Response('bad.example\n' + ('# fixture padding\n').repeat(650000));
+    const domains = await feed.loadActivePhishingDomains();
+    assert.ok(domains?.has('bad.example'));
+  });
+  await check('oversized community feed is rejected without a partial clean result', async () => {
+    delete require.cache[require.resolve(join(compiled, 'free-threat-intel.js'))];
+    const feed = require(join(compiled, 'free-threat-intel.js'));
+    globalThis.fetch = async () => new Response('bad.example\n' + '#'.repeat(17 * 1024 * 1024));
+    assert.equal(await feed.loadActivePhishingDomains(), null);
+    assert.equal((await feed.checkFreePhishingFeed('https://example.test'))[0].title, 'Threat intelligence unavailable');
   });
   console.log(`${passed} security regression checks passed against compiled implementation.`);
 } finally { rmSync(compiled, { recursive: true, force: true }); }
