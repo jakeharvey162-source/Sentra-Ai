@@ -1,4 +1,5 @@
 import type { AgentFinding, EvidenceSignal, SentraDecision } from "./types";
+import { checkFreePhishingFeed } from "./free-threat-intel";
 
 export interface CyberAgent {
   id: string;
@@ -92,6 +93,7 @@ export class UrlInvestigator implements CyberAgent {
 
   async evaluate(input: string): Promise<AgentFinding> {
     const evidence: EvidenceSignal[] = [];
+    evidence.push(...(await checkFreePhishingFeed(input)));
     const match = input.match(/https?:\/\/[^\s]+/i);
 
     if (match) {
