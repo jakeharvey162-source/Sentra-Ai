@@ -83,7 +83,7 @@ Explainable result
 
 Sentra's deterministic cyber-security logic remains usable without a hosted LLM.
 
-For model-backed review, Sentra can use a keyless multi-model layer such as **Puter.js**, which provides access to major proprietary and open models through a user-pays architecture. This allows AI review to be optional instead of making the core security decision depend on a single model provider or developer API key.
+For model-backed review, Sentra now includes an optional **Puter.js AI Council**. It can ask GPT, Claude and Gemini to independently review the deterministic result through Puter's user-pays architecture, without requiring separate developer API keys. The core verdict remains available even when Puter is unavailable.
 
 Planned roles for model-backed review:
 
