@@ -37,6 +37,7 @@ type InvestigationResponse = {
   challenger: { challenged: boolean; counterEvidence: string[] };
   jury: { decision: string; confidence: number; votes: Record<string, number> };
   persisted: boolean;
+  persistenceError?: string;
   scamDNA: { fingerprint: string; traits: string[]; confidence: number };
 };
 
@@ -217,7 +218,7 @@ export default function Home() {
           <a href="#team" className="transition hover:text-white">How it works</a>
           <a href="#protect" className="transition hover:text-white">Protect My App</a>
           <a href="/connections" className="transition hover:text-white">Connections</a>
-          <a href="/auth" className="transition hover:text-white">Account</a>
+          <a href="/cases" className="transition hover:text-white">Saved cases</a>
         </nav>
 
         <div className="flex items-center gap-2">
@@ -226,7 +227,7 @@ export default function Home() {
             local checks ready
           </div>
           <a
-            href="/connections" className="mr-2 text-xs text-white/65 md:hidden">Connect</a>
+            href="/cases" className="mr-2 text-xs text-white/65 md:hidden">Cases</a>
           <a href="#investigate"
             className="rounded-full bg-[#caff46] px-4 py-2 text-[11px] font-semibold text-black transition hover:brightness-110"
           >
@@ -373,7 +374,8 @@ export default function Home() {
               <div>
                 <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/24">investigation result</div>
                 <div className="mt-1 text-sm text-white/70">{result.investigation.id}</div>
-                <p className="mt-2 text-xs text-white/65">{result.persisted ? "Saved to your account." : "Not saved. Sign in and select Save this case to store it."}</p>
+                <p className="mt-2 text-xs text-white/65">{result.persisted ? "Saved to your account." : result.persistenceError || "Not saved. Sign in and select Save this case to store it."}</p>
+                {result.persisted && <a href="/cases" className="mt-2 inline-block text-xs text-lime-200 underline">View or delete saved cases</a>}
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-full border border-white/[0.06] px-3 py-1.5 text-xs text-white/40">risk {score}/100</span>
@@ -411,6 +413,17 @@ export default function Home() {
                     rule-based vote agreement {Math.round(result.jury.confidence * 100)}% · not a probability of safety
                   </div>
                 </div>
+
+                <section aria-label="Safer next steps" className="mt-3 rounded-2xl border border-white/10 p-4">
+                  <h2 className="text-sm font-semibold text-lime-100">What to do next</h2>
+                  <p className="mt-3 text-sm leading-6 text-white/75">{decision === "BLOCK" || decision === "HOLD"
+                    ? "Pause. Do not reply, open attachments, follow the message’s links or share a password or verification code."
+                    : decision === "SAFE"
+                    ? "No strong indicators were found by the available checks. This does not verify the sender or guarantee a link is safe."
+                    : "Verify this request before acting. Do not use contact details or links supplied in the suspicious message."}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/75">Open the organization’s official app or use a contact method you already trust to check the request. Report suspicious messages through your platform’s phishing or spam option.</p>
+                  <a href="https://www.cisa.gov/sites/default/files/2024-09/Secure-Our-World-Phishing-Tip-Sheet.pdf" target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-xs text-lime-200 underline">Read CISA’s phishing guidance</a>
+                </section>
 
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-white/[0.055] bg-white/[0.02] p-4">
@@ -543,6 +556,7 @@ export default function Home() {
       <footer className="relative z-10 mx-auto max-w-7xl border-t border-white/[0.06] px-6 py-8">
         <div className="flex flex-col gap-2 text-[10px] text-white/22 sm:flex-row sm:items-center sm:justify-between">
           <span>Sentra AI — evidence before confidence.</span>
+          <a href="/privacy" className="text-white/65 underline">Privacy and limitations</a>
           <span className="font-mono uppercase tracking-[0.14em]">ForgeHacks 2026</span>
         </div>
       </footer>

@@ -37,6 +37,9 @@ jobs:
       - name: Test distributed rate limiting
         run: npm run test:rate
 
+      - name: Test case history and deletion ownership
+        run: npm run test:cases
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

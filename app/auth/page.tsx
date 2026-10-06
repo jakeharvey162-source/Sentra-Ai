@@ -32,7 +32,8 @@ export default function AuthPage() {
     if (result.error) {
       setMessage(result.error.message);
     } else if (mode === "login") {
-      window.location.href = "/";
+      const next = new URLSearchParams(window.location.search).get("next");
+      window.location.href = next && ["/", "/cases", "/connections"].includes(next) ? next : "/cases";
     } else {
       setMessage("Account created. Check your email if confirmation is enabled.");
     }
@@ -53,9 +54,10 @@ export default function AuthPage() {
           </div>
         </div>
 
+        <a href="/" className="mt-6 inline-block text-sm text-blue-300">Back to Sentra</a>
         <h1 className="mt-8 text-2xl font-semibold">{mode === "login" ? "Sign in" : "Create account"}</h1>
         <p className="mt-2 text-sm leading-6 text-slate-500">
-          Signing in lets Sentra save your investigations behind owner-only database policies.
+          Sign in to manage saved investigations or connected accounts. Saving a case is always optional.
         </p>
 
         {!configured && (
@@ -66,15 +68,15 @@ export default function AuthPage() {
 
         <form onSubmit={submit} className="mt-6 space-y-3">
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email" className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-blue-400/40" />
+            aria-label="Email" autoComplete="email" placeholder="Email" className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-blue-400/40" />
           <input required minLength={8} type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password" className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-blue-400/40" />
+            aria-label="Password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="Password" className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm outline-none focus:border-blue-400/40" />
           <button disabled={busy || !configured} className="w-full rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-50">
             {busy ? "Working..." : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
 
-        {message && <p className="mt-4 text-sm text-slate-300">{message}</p>}
+        {message && <p role="status" className="mt-4 text-sm text-slate-300">{message}</p>}
 
         <button disabled={busy} onClick={() => { setMessage(""); setMode(mode === "login" ? "signup" : "login"); }} className="mt-5 text-sm text-blue-300">
           {mode === "login" ? "Need an account? Sign up" : "Already have an account? Sign in"}

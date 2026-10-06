@@ -55,6 +55,20 @@ try {
       assert.equal((await investigateText(input)).investigation.decision, 'BLOCK');
     });
   }
+  for (const input of ['Please send me your one-time code.', 'Give me your 2FA code.', 'Provide your MFA code.', 'Share your authentication code.', 'Send your one‑time passcode.', 'Give me your password reset code.', 'Send your pa\u2060ssword now.', 'Send your pa\u00ADssword now.']) {
+    await check(`authentication alias or invisible-character request detected: ${input}`, async () => {
+      const result = await investigateText(input);
+      assert.equal(result.investigation.decision, 'BLOCK');
+      assert.ok(result.scamDNA.traits.includes('credential-request'));
+    });
+  }
+  for (const input of ['Never share your one-time code with anyone.', 'Do not send your 2FA code.', 'We will never ask for your authentication code.', 'Please send your postal code.', 'Share your project code with your team.']) {
+    await check(`alias safety advice and ordinary codes do not become theft: ${input}`, async () => {
+      const result = await investigateText(input);
+      assert.equal(result.investigation.decision, 'SAFE');
+      assert.ok(!result.scamDNA.traits.includes('credential-request'));
+    });
+  }
   await check('Challenger and majority cannot override strong evidence', () => {
     const empty = { recommendation: 'SAFE', evidence: [] };
     assert.equal(runChallenger([empty], 'HOLD').adjustedDecision, 'HOLD');

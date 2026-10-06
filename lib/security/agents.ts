@@ -1,3 +1,4 @@
+import { normalizeSecurityText, requestsCredentials } from "./message-signals";
 import type { AgentFinding, EvidenceSignal, SentraDecision } from "./types";
 import { checkFreePhishingFeed } from "./free-threat-intel";
 import { extractUrls } from "./urls";
@@ -36,14 +37,9 @@ export class PhishingInvestigator implements CyberAgent {
 
   async evaluate(input: string): Promise<AgentFinding> {
     const evidence: EvidenceSignal[] = [];
-    const normalized = input.normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g, "");
+    const normalized = normalizeSecurityText(input);
     const urgency = /\b(urgent|immediately|act now|suspended|locked)\b/i.test(normalized);
-    // Inspect sentences independently: a safety disclaimer must not hide a later request.
-    const credentials = normalized.split(/[.!?;\n]+/).some(sentence => {
-      const remainder = sentence.replace(/\b(?:never|do not|don't|won't|will never)\s+(?:\w+\s+){0,3}(?:share|send|give|disclose|ask|request)\s+(?:\w+\s+){0,3}(?:password|otp|pin|verification code)(?:\s+(?:or|and)\s+(?:password|otp|pin|verification code))?/gi, "");
-      return /\b(password|otp|pin|verification code|login|sign in)\b/i.test(remainder)
-        && /\b(send|share|enter|provide|give|confirm|verify|sign in|log ?in)\b/i.test(remainder);
-    });
+    const credentials = requestsCredentials(input);
     const payment = /\b(pay|payment|bank transfer|gift card|crypto|wallet)\b/i.test(normalized);
 
     if (urgency) evidence.push(signal(

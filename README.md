@@ -293,7 +293,7 @@ Open `/connections` to manage Composio account connections and scan recent Gmail
 
 Working alpha, not yet verified for worldwide production use. PR #4 passed production dependency audit, 30 security regressions, 19 connector fixture checks, 6 rate checks, HTTP boundaries, 26 desktop/mobile browser tests, build/type checks and secret scanning. Production deployment was verified with normal and malicious sample investigations; live DB rollback fixtures proved ownership isolation and forged-capability denial.
 
-Still required before broad launch: real Gmail/Outlook/Slack OAuth and minimum-scope verification, genuine model-backed AI Council testing, account/history/deletion controls, operational monitoring and incident handling, privacy/retention documentation, measured load tests, accessibility and multilingual detector evaluation. Development-only dependency advisories remain documented in the security assessment.
+Still required before broad launch: real Gmail/Outlook/Slack OAuth and minimum-scope verification, genuine model-backed AI Council testing, self-service authentication-account deletion, operational monitoring and incident handling, privacy/retention documentation, measured load tests, accessibility and multilingual detector evaluation. Development-only dependency advisories remain documented in the security assessment.
 
 Strix 1.6.2 is installed but has not completed a scan. Docker is missing locally; cloud login was blocked by automatic approval review over persistent account/domain-management access. Do not describe the app as Strix-certified or vulnerability-free.
 
@@ -302,3 +302,15 @@ Pitch production script: [four-minute script](test-lab/FOUR-MINUTE-PITCH.md). A 
 ### Database secret provisioning
 
 Apply the Sentra migrations to a Supabase project containing the case tables. Generate a cryptographically random 32-byte server secret (64 lowercase hex characters), store it as `SENTRA_SERVER_SECRET` in deployment environment variables, and insert only its SHA-256 hash into `sentra_private.server_config` as the sole `id=true` row using an administrator connection. Never expose the value in browser variables, SQL migration files, logs or Git. Configure the matching public Supabase URL and publishable key. Deploy the updated API before applying `sentra_api_only_storage`. Production quota failures return 503 rather than silently bypassing limits.
+
+
+## User control — October 6, 2026
+
+- `/cases`: private paginated history, evidence review, individual deletion, confirmed bulk deletion and current-session sign-out. All API queries include the server-verified owner alongside RLS; no service-role credential is used. Deleting a case cascades its evidence. Account deletion remains separate and unavailable.
+- `/privacy`: describes submitted data, optional saving, evidence fragments, retention, AI/provider sharing, connections and the limits of deletion.
+- Investigations now provide practical verification/reporting steps, and failed saving is surfaced instead of hidden.
+- Login returns to a fixed allowed destination, including Connections and Saved cases; arbitrary redirects are rejected.
+
+Verification includes compiled case-service hostile-request fixtures, production HTTP checks, desktop/mobile browser flows and rollback-only live DB deletion/isolation checks. Provider fixtures do not constitute live OAuth or AI verification.
+
+Authentication-code detection now recognizes one-time codes/passcodes, 2FA/MFA/authentication/password-reset codes and invisible-character credential obfuscation, while checking safety warnings and ordinary project/postal codes for false alarms.
