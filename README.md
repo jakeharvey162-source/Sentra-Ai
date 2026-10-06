@@ -312,3 +312,5 @@ Apply the Sentra migrations to a Supabase project containing the case tables. Ge
 - Login returns to a fixed allowed destination, including Connections and Saved cases; arbitrary redirects are rejected.
 
 Verification includes compiled case-service hostile-request fixtures, production HTTP checks, desktop/mobile browser flows and rollback-only live DB deletion/isolation checks. Provider fixtures do not constitute live OAuth or AI verification.
+
+Authentication-code detection now recognizes one-time codes/passcodes, 2FA/MFA/authentication/password-reset codes and invisible-character credential obfuscation, while checking safety warnings and ordinary project/postal codes for false alarms.

@@ -201,7 +201,7 @@ test('bulk deletion requires explicit phrase; failure keeps saved cases', async 
   await expect(confirm).toBeDisabled();
   await page.getByRole('textbox',{name:'Deletion confirmation'}).fill('DELETE ALL SAVED CASES');
   await confirm.click();
-  await expect(page.getByRole('alert')).toHaveText('Cases could not be deleted. Please try again.');
+  await expect(page.getByRole('main').getByRole('alert')).toHaveText('Cases could not be deleted. Please try again.');
   await expect(page.getByRole('button',{name:'View evidence for S-BULK'})).toBeVisible();
   await expect(page.getByRole('status')).toHaveCount(0);
   expect(posts).toEqual([{action:'deleteAll',confirmation:'DELETE ALL SAVED CASES'}]);
@@ -228,4 +228,17 @@ test('verdicts lead to practical safer actions without opening submitted links',
  await expect(steps.getByText(/Pause. Do not reply/)).toBeVisible();
  await expect(steps.getByText(/official app/)).toBeVisible();
  await expect(page.locator('a[href*="evil.example"]')).toHaveCount(0);
+});
+
+
+test('authentication-code aliases are detected while safety advice stays clear',async({page})=>{
+ await page.goto('/');
+ const input=page.getByPlaceholder('Paste a suspicious message or URL...');
+ const run=page.getByRole('button',{name:'Run Cyber Team',exact:true});
+ await input.fill('Please send me your one-time code.'); await run.click();
+ await expect(page.getByText('BLOCK',{exact:true})).toBeVisible();
+ await expect(page.getByText('Credential request detected',{exact:true})).toBeVisible();
+ await input.fill('Never share your one-time code with anyone.'); await run.click();
+ await expect(page.getByText('SAFE',{exact:true})).toBeVisible();
+ await expect(page.getByText('Credential request detected',{exact:true})).toHaveCount(0);
 });

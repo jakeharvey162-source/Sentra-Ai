@@ -13,3 +13,8 @@ Added 12 compiled case-service security fixtures and desktop/mobile browser cove
 Safer-action copy follows CISA's phishing guidance: https://www.cisa.gov/sites/default/files/2024-09/Secure-Our-World-Phishing-Tip-Sheet.pdf . No submitted suspicious URL is converted into an action link.
 
 Remaining gates: real connector OAuth/minimum scopes, real AI review, authentication-account deletion without impacting other apps sharing the auth project, monitoring/load/accessibility/multilingual evaluation, and completion of the blocked Strix scan.
+
+
+## Detection iteration
+
+An exploratory probe found three missed credential requests: "Please send me your one-time code", "Give me your 2FA code", and a password split by U+2060. Added shared security-text normalization for explicit authentication-code aliases, common Unicode dash forms and invisible formatting separators. Added eight malicious examples and five benign/safety-warning regressions; original inputs are not rewritten for display or storage. This is a targeted deterministic improvement, not proof of universal language understanding.
