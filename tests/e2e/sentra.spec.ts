@@ -146,3 +146,86 @@ test("connected scan consent, stale-result clearing and disconnect work with fix
   await expect(page.getByText("No connected accounts yet.")).toBeVisible();
   expect(posts[1]).toEqual({action:"disconnect",accountId:"ca_fixture"});
 });
+
+test('case history requires sign-in and privacy is reachable', async ({ page }) => {
+  await page.goto('/cases');
+  await expect(page.getByRole('heading',{name:'Your saved investigations'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Sign in to view your saved cases'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Delete all saved cases'})).toHaveCount(0);
+  await page.getByRole('link',{name:'How Sentra handles your data'}).click();
+  await expect(page.getByRole('heading',{name:'Your data and Sentra’s limits'})).toBeVisible();
+  await expect(page.getByText(/Saved cases remain until you delete them/)).toBeVisible();
+});
+
+test('owned history evidence, pagination and deliberate deletion work with fixtures', async ({ page }) => {
+  const saved={id:'b20fcbda-75ac-4c24-8a2e-3d0e12e30a11',case_ref:'S-FIXTURE',kind:'message',input_preview:'<img src=x onerror=alert(1)>',risk_score:90,decision:'BLOCK',explanation:'Fixture: credential pressure detected.',created_at:'2026-10-06T10:00:00Z'};
+  let removed=false;const posts:Record<string,unknown>[]=[];
+  await page.route('**/api/cases*', async route=>{
+    if(route.request().method()==='POST') {const body=route.request().postDataJSON();posts.push(body);if(body.action==='delete'||body.action==='deleteAll')removed=true;return route.fulfill({json:{deleted:true,signedOut:body.action==='signOut'}});}
+    const url=new URL(route.request().url());
+    if(url.searchParams.has('id')) return route.fulfill({json:{case:saved,evidence:[{id:'e1',title:'Credential request detected',detail:'<script>alert(1)</script>',severity:'high'}]}});
+    return route.fulfill({json:{cases:removed?[]:[saved],page:Number(url.searchParams.get('page')||0),hasMore:!removed&&url.searchParams.get('page')==='0',email:'fixture@example.invalid'}});
+  });
+  await page.goto('/cases');
+  await expect(page.getByText('fixture@example.invalid')).toBeVisible();
+  await expect(page.locator('img[src=x]')).toHaveCount(0);
+  await page.getByRole('button',{name:'View evidence for S-FIXTURE'}).click();
+  await expect(page.getByRole('region',{name:'Saved case evidence'})).toBeVisible();
+  await expect(page.getByText('<script>alert(1)</script>',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Older cases'}).click();
+  await expect(page.getByText('Page 2',{exact:true})).toBeVisible();
+  await expect(page.getByRole('region',{name:'Saved case evidence'})).toHaveCount(0);
+  await page.getByRole('button',{name:'Delete S-FIXTURE',exact:true}).click();
+  await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  expect(posts).toEqual([]);
+  await page.getByRole('button',{name:'Delete S-FIXTURE',exact:true}).click();
+  await page.getByRole('button',{name:'Confirm deletion',exact:true}).click();
+  await expect(page.getByRole('status')).toHaveText('Saved case and its evidence were deleted.');
+  await expect(page.getByText(/No saved cases on this page/)).toBeVisible();
+  expect(posts).toEqual([{action:'delete',id:saved.id}]);
+  await page.getByRole('button',{name:'Sign out of this session'}).click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(posts[1]).toEqual({action:'signOut'});
+});
+
+test('bulk deletion requires explicit phrase; failure keeps saved cases', async ({ page }) => {
+  const saved={id:'b20fcbda-75ac-4c24-8a2e-3d0e12e30a11',case_ref:'S-BULK',kind:'message',input_preview:'fixture',risk_score:0,decision:'SAFE',explanation:'fixture',created_at:'2026-10-06T10:00:00Z'};
+  const posts:Record<string,unknown>[]=[];
+  await page.route('**/api/cases*',async route=>{
+    if(route.request().method()==='POST'){posts.push(route.request().postDataJSON());return route.fulfill({status:503,json:{error:'Cases could not be deleted. Please try again.'}});}
+    return route.fulfill({json:{cases:[saved],page:0,hasMore:false,email:'fixture@example.invalid'}});
+  });
+  await page.goto('/cases');
+  await page.getByRole('button',{name:'Delete all saved cases',exact:true}).click();
+  const confirm=page.getByRole('button',{name:'Confirm deletion',exact:true});
+  await expect(confirm).toBeDisabled();
+  await page.getByRole('textbox',{name:'Deletion confirmation'}).fill('DELETE ALL SAVED CASES');
+  await confirm.click();
+  await expect(page.getByRole('alert')).toHaveText('Cases could not be deleted. Please try again.');
+  await expect(page.getByRole('button',{name:'View evidence for S-BULK'})).toBeVisible();
+  await expect(page.getByRole('status')).toHaveCount(0);
+  expect(posts).toEqual([{action:'deleteAll',confirmation:'DELETE ALL SAVED CASES'}]);
+});
+
+test('expired history session clears previously visible private data',async({page})=>{
+  const saved={id:'b20fcbda-75ac-4c24-8a2e-3d0e12e30a11',case_ref:'S-PRIVATE',kind:'message',input_preview:'PRIVATE PREVIEW',risk_score:0,decision:'SAFE',explanation:'fixture',created_at:'2026-10-06T10:00:00Z'};
+  let first=true;
+  await page.route('**/api/cases*',async route=>{if(first){first=false;return route.fulfill({json:{cases:[saved],page:0,hasMore:false,email:'fixture@example.invalid'}});}return route.fulfill({status:401,json:{error:'Sign in to manage your saved cases.'}});});
+  await page.goto('/cases');
+  await expect(page.getByText('Saved preview: PRIVATE PREVIEW')).toBeVisible();
+  await page.getByRole('button',{name:'Refresh history'}).click();
+  await expect(page.getByRole('heading',{name:'Sign in to view your saved cases'})).toBeVisible();
+  await expect(page.getByText('Saved preview: PRIVATE PREVIEW')).toHaveCount(0);
+  await expect(page.getByText('fixture@example.invalid')).toHaveCount(0);
+});
+
+test('verdicts lead to practical safer actions without opening submitted links',async({page})=>{
+ await page.goto('/');
+ await page.getByPlaceholder('Paste a suspicious message or URL...').fill('URGENT: send your password immediately. https://bank.example@evil.example');
+ await page.getByRole('button',{name:'Run Cyber Team',exact:true}).click();
+ const steps=page.getByRole('region',{name:'Safer next steps'});
+ await expect(steps).toBeVisible();
+ await expect(steps.getByText(/Pause. Do not reply/)).toBeVisible();
+ await expect(steps.getByText(/official app/)).toBeVisible();
+ await expect(page.locator('a[href*="evil.example"]')).toHaveCount(0);
+});

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '-H', '127.0.0.1', '-p', '3009'], {stdio: ['ignore','pipe','pipe']});
+const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '-H', '127.0.0.1', '-p', '3009'], {stdio: ['ignore','pipe','pipe'], env: {...process.env, NEXT_PUBLIC_SUPABASE_URL:'https://ci-placeholder.supabase.co', NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_ci_placeholder'}});
 let output = '';
 server.stdout.on('data', b => output += b);
 server.stderr.on('data', b => output += b);
@@ -13,6 +13,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   assert.ok(ready, output);
+  let cases=await fetch(base+'/api/cases');assert.equal(cases.status,401);assert.equal(cases.headers.get('cache-control'),'no-store, private');
+  cases=await fetch(base+'/api/cases',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'deleteAll',confirmation:'DELETE ALL SAVED CASES'})});assert.equal(cases.status,403);
+  cases=await fetch(base+'/api/cases',{method:'POST',headers:{'content-type':'application/json',origin:base},body:JSON.stringify({action:'signOut'})});assert.equal(cases.status,401);
   let connection=await fetch(base+'/api/connections');assert.equal(connection.status,401);assert.equal(connection.headers.get('cache-control'),'no-store');
   connection=await fetch(base+'/api/connections',{method:'POST',headers:{'content-type':'application/json'},body:'{}'});assert.equal(connection.status,403);
   connection=await fetch(base+'/api/connections',{method:'POST',headers:{'content-type':'application/json',origin:base},body:JSON.stringify({action:'scan',accountId:'other',consent:true})});assert.equal(connection.status,401);
